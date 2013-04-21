@@ -9,11 +9,11 @@ DOCUMENTATION = """
 ---
 module: sshknownhosts
 short_description: Maintain the ssh_known_hosts file by adding/
-                   removing/ updating keys.
+                   removing/ updating public keys.
 description:
   - This module will scan a host for its ssh key and add it to the ssh
     known hosts file.  Typically this file is located in
-    /etc/ssh/ssh_known_hosts or ~user/.ssh/known_hosts. If the host
+    /etc/ssh/ssh_known_hosts or ~user/.ssh/known_hosts. If the public
     key is already present in the known hosts file and it is does not
     match the current value, it is updated.  Otherwise the hosts file
     is untouched. This is an alternative to copying a file to each
@@ -42,7 +42,7 @@ options:
     choices: [ rsa, dsa ]
     default: "rsa"
     description:
-      - The type of key to scan for.
+      - The type of public key to scan for.
   keyscan:
     required: false
     default: "ssh-keyscan"
@@ -86,27 +86,31 @@ def findhostinlines(lines, host):
     mre = re.compile(regexp)
 
     found = -1
-    m = None
+#    m = None
     for lineno, cur_line in enumerate(lines):
         match_found = mre.search(cur_line)
         if match_found:
             found = lineno
     return found
 
-def writesshknownhosts(dest, lines):
-    of = open(dest, 'wb')
-    of.writelines(lines)
-    of.close
+# write the new/changed file. this is the only place where system
+# changes are performed
+def writesshknownhosts(module, dest, lines):
+    if not module.check_mode:
+        of = open(dest, 'wb')
+        of.writelines(lines)
+        of.close
 
 
-def getkey(host, keyscan, enctype):
+# scan the remote host
+def getkey(module, host, keyscan, enctype):
     cmd = keyscan + ' -t ' + enctype + ' ' + host
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE)
-    (out, err) = p.communicate()
-    rc = p.returncode
-
-    return out
+    (rc, out, err) = module.run_command(cmd)
+#    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
+#                         stderr=subprocess.PIPE)
+#    (out, err) = p.communicate()
+#    rc = p.returncode
+    return [ rc, out ]
 
 
 def present(module, dest, host, keyscan, enctype):
@@ -114,18 +118,19 @@ def present(module, dest, host, keyscan, enctype):
     msg = ""
     lines = readsshknownhosts(dest)
     found = findhostinlines(lines, host)
-    key = getkey(host, keyscan, enctype)
+    rc, key = getkey(module, host, keyscan, enctype)
 
-    if found != -1:
-        if key != lines[found]:
-            del lines[found]
+    if rc == 0:
+        if found != -1:
+            if key != lines[found]:
+                del lines[found]
+                lines.append(key)
+                writesshknownhosts(module, dest, lines)
+                changed = True
+        else:
             lines.append(key)
-            writesshknownhosts(dest, lines)
+            writesshknownhosts(module, dest, lines)
             changed = True
-    else:
-        lines.append(key)
-        writesshknownhosts(dest, lines)
-        changed = True
 
     module.exit_json(changed=changed, msg=msg)
 
@@ -135,11 +140,10 @@ def absent(module, dest, host):
     msg = ""
     lines = readsshknownhosts(dest)
     found = findhostinlines(lines, host)
-    key = os.popen('ssh-keyscan ' + host).read()
 
     if found != -1:
         del lines[found]
-        writesshknownhosts(dest, lines)
+        writesshknownhosts(module, dest, lines)
         changed = True
 
     module.exit_json(changed=changed, msg=msg)
@@ -154,7 +158,7 @@ def main():
             enctype=dict(default='rsa',  choices=['rsa', 'dsa']),
             host=dict(required=True, aliases = ['name']),
         ),
-#        supports_check_mode=True
+        supports_check_mode=True
     )
 
     params = module.params
