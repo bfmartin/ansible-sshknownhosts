@@ -13,6 +13,9 @@ Copy `sshknownhosts` to `$ANSIBLE_LIBRARY` on the management host.
 	sshknownhosts
 		host= host1.domain.com
 		state= present|absent (default: present)
+		keyscan= /path/to/ssh-keyscan (default: use PATH)
+		dest= /path/to/ssh_known_hosts (default: /etc/ssh/ssh_known_hosts)
+		enctype= rsa|dsa (default: rsa)
 
 
 ## Playbook
@@ -33,9 +36,7 @@ created.
 (taken from the ssk-keyscan man page)
 
 
-## Future Enhancements
-
-Here's what I'm considering adding in the future:
+## Possible Future Enhancements
 
 - aliases: adding aliases for hosts.  They end up in the known hosts
   file like this: host1,alias1,alias2 sshkey
@@ -53,6 +54,6 @@ Feedback on these and other options would be appreciated.
 * A module I wrote for my own use that others might find useful, so I
   added some docs and put it up on github.
 * This is my first python program, so I appreciate some feedback
-* Tested on Debian flavours (Mint 14, Debian Unstable and XUbuntu
-  12.10) and OpenBSD.
+* Tested on Debian flavours (Mint 14, Debian Sid and XUbuntu 12.10)
+  and OpenBSD.
 * Contact me at https://www.bfmartin.ca/contact/
