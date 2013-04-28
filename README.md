@@ -5,23 +5,31 @@
 
 Copy `sshknownhosts` to `$ANSIBLE_LIBRARY` on the management host.
 
-	install -m 444 sshknownhosts $ANSIBLE_LIBRARY/sshknownhosts
+        install -m 444 sshknownhosts $ANSIBLE_LIBRARY/sshknownhosts
 
 
 ## Usage
 
-	sshknownhosts
-		host= host1.domain.com
-		state= present|absent (default: present)
-		keyscan= /path/to/ssh-keyscan (default: use PATH)
-		dest= /path/to/ssh_known_hosts (default: /etc/ssh/ssh_known_hosts)
-		enctype= rsa|dsa (default: rsa)
+        sshknownhosts
+                host= host1.domain.com
+                state= present|absent (default: present)
+                keyscan= /path/to/ssh-keyscan (default: use PATH)
+                dest= /path/to/ssh_known_hosts (default: /etc/ssh/ssh_known_hosts)
+                enctype= rsa|dsa (default: rsa)
 
 
 ## Playbook
 
-	- name: Add hosts to ssh_known_hosts file
-	  action: sshknownhosts host=localhost state=present
+        - name: Add localhost to ssh_known_hosts file
+          action: sshknownhosts host=localhost state=present
+
+        - name: Add several hosts to ssh_known_hosts file
+          action: sshknownhosts host=${item} state=present
+          with_items:
+            - host1.example.com
+            - host2.example.com
+            - host3.example.com
+
 
 
 ## Security
@@ -40,6 +48,9 @@ created.
 
 - aliases: adding aliases for hosts.  They end up in the known hosts
   file like this: host1,alias1,alias2 sshkey
+- as an alternative to supplying a host or list of hosts, get the list
+  of hosts from the existing ssh_known_hosts file and re-scan for
+  updates.
 - key: supplying the host key from a string or file instead of looking
   it up with the ssh-keyscan program.
 - ssh information: use configuration items for ssh used by the
@@ -56,5 +67,5 @@ Feedback on these and other options would be appreciated.
 * This is my first python program, so I appreciate some feedback (and
   my first public ansible module)
 * Tested on Debian flavours (Mint 14, Debian Sid and XUbuntu 12.10 and
-  13.04) and OpenBSD.
+  13.04) and OpenBSD 5.2.
 * Contact me at https://www.bfmartin.ca/contact/

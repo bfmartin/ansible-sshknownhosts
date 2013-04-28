@@ -13,11 +13,13 @@ short_description: Maintain the ssh_known_hosts file by adding/
 description:
   - This module will scan a host for its ssh key and add it to the ssh
     known hosts file.  Typically this file is located in
-    /etc/ssh/ssh_known_hosts or ~user/.ssh/known_hosts. If the public
-    key is already present in the known hosts file and it is does not
-    match the current value, it is updated.  Otherwise the hosts file
-    is untouched. This is an alternative to copying a file to each
-    host using the copy command.
+    /etc/ssh/ssh_known_hosts or ~user/.ssh/known_hosts.
+  - If the public key is already present in the known hosts file and
+    it is does not match the current value, it is updated.  Otherwise
+    the hosts file is untouched.
+  - This is an alternative to copying a file to each host using the
+    copy command.
+
 options:
   host:
     required: true
@@ -56,17 +58,21 @@ options:
 EXAMPLES = r"""
 Examples:
 
-   action: sshknownhosts host=localhost
+  - name: Add localhost to ssh_known_hosts file
+    action: sshknownhosts host=localhost state=present
 
-   action: sshknownhosts host=${item}
-   with_items:
-     - host1.example.com
-     - host2.example.com
-     - host3.example.com
+  - name: Add several hosts to ssh_known_hosts file
+    action: sshknownhosts host=${item} state=present
+    with_items:
+      - host1.example.com
+      - host2.example.com
+      - host3.example.com
 
-   action: sshknownhosts host=abc.example.com dest=/usr/local/etc/ssh_known_hosts keyscan=/usr/local/bin/ssh-keyscan enctype=dsa
+  - name: a long example
+    action: sshknownhosts host=abc.example.com dest=/usr/local/etc/ssh_known_hosts keyscan=/usr/local/bin/ssh-keyscan enctype=dsa
 
-   action: sshknownhosts host=mypc dest=~myself/.ssh/knownhosts
+  - name: for one user id
+    action: sshknownhosts host=mypc dest=~myself/.ssh/knownhosts
 """
 
 # read a text file.
