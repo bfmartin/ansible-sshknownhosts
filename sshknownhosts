@@ -69,6 +69,9 @@ Examples:
    action: sshknownhosts host=mypc dest=~myself/.ssh/knownhosts
 """
 
+# read a text file.
+# return the lines as an array.  if the file is not found, return an
+# empty array
 def read_known_hosts(dest):
     if os.path.exists(dest):
         f = open(dest, 'rb')
@@ -82,8 +85,9 @@ def read_known_hosts(dest):
 # locate a host in the known hosts array
 # return the position if found, or -1 if not found
 def find_host(lines, host):
-    regexp = r"^" + host + ' '
-    mre = re.compile(regexp)
+    # look for the hostname at the beginning of a line, followed by a
+    # space character
+    mre = re.compile(r"^" + host + ' ')
 
     found = -1
     for lineno, cur_line in enumerate(lines):
@@ -103,10 +107,14 @@ def write_known_hosts(module, dest, lines):
 
 
 # scan the remote host
+# return an array: [ rc, str ]
+# rc = return code: 0 = success, -1 = error
+# str = public key or error message
 def get_key(module, host, keyscan, enctype):
     cmd = keyscan + ' -t ' + enctype + ' ' + host
     (rc, out, err) = module.run_command(cmd)
 
+    # look for a non-blank string
     mre = re.compile(r"^\s*$")
     if not mre.search(out):
         return [ 0, out ]
@@ -172,6 +180,7 @@ def main():
     keyscan = module.params[ 'keyscan' ]
     enctype = module.params[ 'enctype' ]
     dest = os.path.expanduser(params[ 'dest' ])
+# not implemented:
 #    aliases = module.params['aliases']
 #    key = module.params['key']
 
