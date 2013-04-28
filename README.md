@@ -41,7 +41,7 @@ ssh-keyscan can help in the detection of tampered keyfiles or man in
 the middle attacks which have begun after the ssh_known_hosts file was
 created.
 
-(taken from the ssk-keyscan man page)
+(taken from the ssh-keyscan man page)
 
 
 ## Possible Future Enhancements
