@@ -53,7 +53,8 @@ Feedback on these and other options would be appreciated.
 
 * A module I wrote for my own use that others might find useful, so I
   added some docs and put it up on github.
-* This is my first python program, so I appreciate some feedback
-* Tested on Debian flavours (Mint 14, Debian Sid and XUbuntu 12.10)
-  and OpenBSD.
+* This is my first python program, so I appreciate some feedback (and
+  my first public ansible module)
+* Tested on Debian flavours (Mint 14, Debian Sid and XUbuntu 12.10 and
+  13.04) and OpenBSD.
 * Contact me at https://www.bfmartin.ca/contact/
