@@ -35,14 +35,14 @@ options:
     default: /etc/ssh/ssh_known_hosts
   state:
     required: false
-    choices: [ present, absent ]
+    choices: [present, absent]
     default: "present"
     aliases: [name]
     description:
       - Whether the host should be there or not.
   enctype:
     required: false
-    choices: [ rsa, dsa ]
+    choices: [rsa, dsa]
     default: "rsa"
     description:
       - The type of public key to scan for.
@@ -84,7 +84,7 @@ def read_known_hosts(dest):
         lines = f.readlines()
         f.close()
     else:
-        lines = [ ]
+        lines = []
     return lines
 
 
@@ -113,7 +113,7 @@ def write_known_hosts(module, dest, lines):
 
 
 # scan the remote host
-# return an array: [ rc, str ]
+# return an array: [rc, str]
 # rc = return code: 0 = success, -1 = error
 # str = public key or error message
 def get_key(module, host, keyscan, enctype):
@@ -123,9 +123,9 @@ def get_key(module, host, keyscan, enctype):
     # look for a non-blank string
     mre = re.compile(r"^\s*$")
     if not mre.search(out):
-        return [ 0, out ]
+        return [0, out]
     else:
-        return [ -1, err.strip() ]
+        return [-1, err.strip()]
 
 
 def present(module, dest, host, keyscan, enctype):
@@ -172,20 +172,20 @@ def absent(module, dest, host):
 def main():
     module = AnsibleModule(
         argument_spec=dict(
-            host=dict(required=True, aliases=[ 'name' ]),
+            host=dict(required=True, aliases=['name']),
             dest=dict(default='/etc/ssh/ssh_known_hosts'),
             keyscan=dict(default='ssh-keyscan'),
-            state=dict(default='present', choices=[ 'absent', 'present' ]),
-            enctype=dict(default='rsa', choices=[ 'rsa', 'dsa' ]),
+            state=dict(default='present', choices=['absent', 'present']),
+            enctype=dict(default='rsa', choices=['rsa', 'dsa']),
         ),
         supports_check_mode=True
     )
     params = module.params
 
-    host = module.params[ 'host' ]
-    keyscan = module.params[ 'keyscan' ]
-    enctype = module.params[ 'enctype' ]
-    dest = os.path.expanduser(params[ 'dest' ])
+    host = module.params['host']
+    keyscan = module.params['keyscan']
+    enctype = module.params['enctype']
+    dest = os.path.expanduser(params['dest'])
 # not implemented:
 #    aliases = module.params['aliases']
 #    key = module.params['key']
