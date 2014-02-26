@@ -42,7 +42,7 @@ options:
       - Whether the host should be there or not.
   enctype:
     required: false
-    choices: [rsa, dsa]
+    choices: [ecdsa, rsa, dsa]
     default: "rsa"
     description:
       - The type of public key to scan for.
@@ -176,7 +176,7 @@ def main():
             dest=dict(default='/etc/ssh/ssh_known_hosts'),
             keyscan=dict(default='ssh-keyscan'),
             state=dict(default='present', choices=['absent', 'present']),
-            enctype=dict(default='rsa', choices=['rsa', 'dsa']),
+            enctype=dict(default='rsa', choices=['ecdsa', 'rsa', 'dsa']),
         ),
         supports_check_mode=True
     )
