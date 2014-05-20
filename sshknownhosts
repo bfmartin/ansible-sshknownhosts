@@ -15,7 +15,7 @@ description:
     known hosts file.  Typically this file is located in
     /etc/ssh/ssh_known_hosts or ~user/.ssh/known_hosts.
   - If the public key is already present in the known hosts file and
-    it is does not match the current value, it is updated.  Otherwise
+    it does not match the current value, it is updated.  Otherwise
     the hosts file is untouched.
   - This is an alternative to copying a file to each host using the
     copy command.
@@ -46,6 +46,11 @@ options:
     default: "rsa"
     description:
       - The type of public key to scan for.
+  port:
+    required: false
+    default: "22"
+    description:
+      - sshd server port, if it runs on a non-standard port.
   keyscan:
     required: false
     default: "ssh-keyscan"
@@ -62,18 +67,19 @@ Examples:
     action: sshknownhosts host=localhost state=present
 
   - name: Add several hosts to ssh_known_hosts file
-    action: sshknownhosts host=${item} state=present
+    action: sshknownhosts host={{ item }} state=present port=2222
     with_items:
       - host1.example.com
       - host2.example.com
       - host3.example.com
 
   - name: a long example
-    action: sshknownhosts host=abc.example.com dest=/usr/local/etc/ssh_known_hosts keyscan=/usr/local/bin/ssh-keyscan enctype=dsa
+    action: sshknownhosts host=abc.example.com dest=/usr/local/etc/ssh_known_hosts keyscan=/usr/local/bin/ssh-keyscan enctype=dsa port=2222
 
   - name: for one user id
     action: sshknownhosts host=mypc dest=~myself/.ssh/knownhosts
 """
+
 
 # read a text file.
 # return the lines as an array.  if the file is not found, return an
@@ -116,8 +122,8 @@ def write_known_hosts(module, dest, lines):
 # return an array: [rc, str]
 # rc = return code: 0 = success, -1 = error
 # str = public key or error message
-def get_key(module, host, keyscan, enctype):
-    cmd = keyscan + ' -t ' + enctype + ' ' + host
+def get_key(module, host, keyscan, enctype, port):
+    cmd = keyscan + ' -p ' + port + ' -t ' + enctype + ' ' + host
     (rc, out, err) = module.run_command(cmd)
 
     # look for a non-blank string
@@ -128,12 +134,12 @@ def get_key(module, host, keyscan, enctype):
         return [-1, err.strip()]
 
 
-def present(module, dest, host, keyscan, enctype):
+def present(module, dest, host, keyscan, enctype, port):
     changed = False
     msg = ""
     lines = read_known_hosts(dest)
     found = find_host(lines, host)
-    rc, key = get_key(module, host, keyscan, enctype)
+    rc, key = get_key(module, host, keyscan, enctype, port)
 
     if rc == 0:
         if found != -1:
@@ -174,9 +180,10 @@ def main():
         argument_spec=dict(
             host=dict(required=True, aliases=['name']),
             dest=dict(default='/etc/ssh/ssh_known_hosts'),
-            keyscan=dict(default='ssh-keyscan'),
-            state=dict(default='present', choices=['absent', 'present']),
             enctype=dict(default='rsa', choices=['ecdsa', 'rsa', 'dsa']),
+            keyscan=dict(default='ssh-keyscan'),
+            port=dict(default='22'),
+            state=dict(default='present', choices=['absent', 'present']),
         ),
         supports_check_mode=True
     )
@@ -184,6 +191,7 @@ def main():
 
     host = module.params['host']
     keyscan = module.params['keyscan']
+    port = module.params['port']
     enctype = module.params['enctype']
     dest = os.path.expanduser(params['dest'])
 # not implemented:
@@ -194,7 +202,7 @@ def main():
         module.fail_json(msg='host= is required')
 
     if params['state'] == 'present':
-        present(module, dest, host, keyscan, enctype)
+        present(module, dest, host, keyscan, enctype, port)
     else:
         absent(module, dest, host)
 

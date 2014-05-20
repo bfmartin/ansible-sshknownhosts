@@ -16,12 +16,12 @@ Copy `sshknownhosts` to `$ANSIBLE_LIBRARY` on the management host.
                 keyscan= /path/to/ssh-keyscan (default: use ssh-keyscan in $PATH)
                 dest= /path/to/ssh_known_hosts (default: /etc/ssh/ssh_known_hosts)
                 enctype= rsa|dsa|ecdsa (default: rsa)
-
+		port= portnumber (default: 22)
 
 ## Playbook
 
         - name: Add localhost to ssh_known_hosts file
-          action: sshknownhosts host=localhost state=present
+          action: sshknownhosts host=localhost state=present port=2222
 
         - name: Add several hosts to ssh_known_hosts file
           action: sshknownhosts host=${item} state=present
@@ -66,6 +66,6 @@ Feedback on these and other options would be appreciated.
   added some docs and put it up on github.
 * This is my first python program, so I appreciate some feedback (and
   my first public ansible module)
-* Tested on Debian flavours (Mint 14, Debian Sid and XUbuntu 12.10 and
-  13.04) and OpenBSD 5.2.
+* Tested on Debian flavours (Mint 14 and up, Debian Sid and XUbuntu
+  12.10 and 13.04) and OpenBSD 5.2 and up.
 * Contact me at http://www.bfmartin.ca/contact/
