@@ -24,7 +24,7 @@ Copy `sshknownhosts` to `$ANSIBLE_LIBRARY` on the management host.
           action: sshknownhosts host=localhost state=present port=2222
 
         - name: Add several hosts to ssh_known_hosts file
-          action: sshknownhosts host=${item} state=present
+          action: sshknownhosts host={{ item }} state=present
           with_items:
             - host1.example.com
             - host2.example.com
