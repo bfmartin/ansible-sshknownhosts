@@ -12,11 +12,11 @@ Copy `sshknownhosts` to `$ANSIBLE_LIBRARY` on the management host.
 
         sshknownhosts
                 host= host1.domain.com
-                state= present|absent (default: present)
-                keyscan= /path/to/ssh-keyscan (default: use ssh-keyscan in $PATH)
                 dest= /path/to/ssh_known_hosts (default: /etc/ssh/ssh_known_hosts)
                 enctype= rsa|dsa|ecdsa (default: rsa)
-		port= portnumber (default: 22)
+                keyscan= /path/to/ssh-keyscan (default: use ssh-keyscan in $PATH)
+                port= portnumber (default: 22)
+                state= present|absent (default: present)
 
 ## Playbook
 
