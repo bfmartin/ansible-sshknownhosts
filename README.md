@@ -16,6 +16,7 @@ Copy `sshknownhosts` to `$ANSIBLE_LIBRARY` on the management host.
                 enctype= rsa|dsa|ecdsa (default: rsa)
                 keyscan= /path/to/ssh-keyscan (default: use ssh-keyscan in $PATH)
                 port= portnumber (default: 22)
+		aliases= alias1[,...] (default: no aliases)
                 state= present|absent (default: present)
 
 ## Playbook
@@ -46,15 +47,9 @@ created.
 
 ## Possible Future Enhancements
 
-- aliases: adding aliases for hosts.  They end up in the known hosts
-  file like this: host1,alias1,alias2 sshkey
-- as an alternative to supplying a host or list of hosts, get the list
-  of hosts from the existing ssh_known_hosts file and re-scan for
-  updates.
 - key: supplying the host key from a string or file instead of looking
   it up with the ssh-keyscan program.
-- ssh information: use configuration items for ssh used by the
-  ssh-keyscan program such as port number, or IPv4/IPv6 addresses.
+- more options from the ssh-keyscan program such as IPv4/IPv6 addresses.
 - allow multiple key types (rsa and dsa together, for example)
 
 Feedback on these and other options would be appreciated.
@@ -66,6 +61,5 @@ Feedback on these and other options would be appreciated.
   added some docs and put it up on github.
 * This is my first python program, so I appreciate some feedback (and
   my first public ansible module)
-* Tested on Debian flavours (Mint 14 and up, Debian Sid and XUbuntu
-  12.10 and 13.04) and OpenBSD 5.2 and up.
+* Tested on Debian flavours (Mint 14 and up) and OpenBSD 5.2 and up.
 * Contact me at http://www.bfmartin.ca/contact/
