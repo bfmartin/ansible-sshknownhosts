@@ -4,6 +4,7 @@
 
 import re
 import os
+import string
 
 DOCUMENTATION = """
 ---
@@ -12,7 +13,7 @@ short_description: Maintain the ssh_known_hosts file by adding/
                    removing/ updating public keys.
 description:
   - This module will scan a host for its ssh key and add it to the ssh
-    known hosts file.  Typically this file is located in
+    known hosts file.  Typically this file is located at
     /etc/ssh/ssh_known_hosts or ~user/.ssh/known_hosts.
   - If the public key is already present in the known hosts file and
     it does not match the current value, it is updated.  Otherwise
@@ -23,21 +24,21 @@ description:
 options:
   host:
     required: true
+    aliases: [name]
     description:
       - the hostname to scan.  Use a fully-qualified domain name if
-        possible. If used with state=absent, this specified the
-        hostname of the key to remove from the dest file
+        possible. If used with state=absent, this specifies the
+        hostname (not the alias) of the key to remove from the dest file.
   dest:
     required: false
+    default: /etc/ssh/ssh_known_hosts
     description:
       - Full path of the file to modify.  This will be created if it
         does not exist.
-    default: /etc/ssh/ssh_known_hosts
   state:
     required: false
     choices: [present, absent]
     default: "present"
-    aliases: [name]
     description:
       - Whether the host should be there or not.
   enctype:
@@ -58,6 +59,12 @@ options:
       - The full path to the program to run to do the scan.  If not
         specified, the module will run the ssh-keyscan program from
         the path.
+  aliases:
+    required: false
+    default: ""
+    description:
+      - One or more aliases for this host in a comma-separated list. These
+        are other names a host is known by.
 """
 
 EXAMPLES = r"""
@@ -78,6 +85,9 @@ Examples:
 
   - name: for one user id
     action: sshknownhosts host=mypc dest=~myself/.ssh/knownhosts
+
+  - name: aliases example
+    action: sshknownhosts host=myserver aliases=mygitserver state=present
 """
 
 
@@ -94,18 +104,17 @@ def read_known_hosts(dest):
     return lines
 
 
-# locate a host in the known hosts array
+# locate a host in the known hosts array.
 # return the position if found, or -1 if not found
 def find_host(lines, host):
     # look for the hostname at the beginning of a line, followed by a
-    # space character
-    mre = re.compile(r"^" + host + ' ')
+    # space character or a comma
+    mre = re.compile(r"^" + host + '[ ,]')
 
     found = -1
     for lineno, cur_line in enumerate(lines):
         if mre.search(cur_line):
             found = lineno
-
     return found
 
 
@@ -118,11 +127,11 @@ def write_known_hosts(module, dest, lines):
         of.close
 
 
-# scan the remote host
+# scan the remote host.
 # return an array: [rc, str]
 # rc = return code: 0 = success, -1 = error
 # str = public key or error message
-def get_key(module, host, keyscan, enctype, port):
+def scan_key(module, host, keyscan, enctype, port):
     cmd = keyscan + ' -p ' + port + ' -t ' + enctype + ' ' + host
     (rc, out, err) = module.run_command(cmd)
 
@@ -134,14 +143,25 @@ def get_key(module, host, keyscan, enctype, port):
         return [-1, err.strip()]
 
 
-def present(module, dest, host, keyscan, enctype, port):
+# add aliases into knownhosts line.
+# key = the line returned by keyscan
+# aliases = the list of comma-separated aliases, or ''
+def add_aliases(key, aliases):
+    if aliases == '':
+        return key
+    parts = string.split(key, ' ', 1)  # split at first space (into 2 parts)
+    return parts[0] + ',' + aliases + ' ' + parts[1]
+
+
+def present(module, dest, host, keyscan, enctype, port, aliases):
     changed = False
     msg = ""
     lines = read_known_hosts(dest)
     found = find_host(lines, host)
-    rc, key = get_key(module, host, keyscan, enctype, port)
+    rc, key = scan_key(module, host, keyscan, enctype, port)
 
     if rc == 0:
+        key = add_aliases(key, aliases)
         if found != -1:
             if key != lines[found]:
                 # replace
@@ -157,7 +177,6 @@ def present(module, dest, host, keyscan, enctype, port):
     else:
         # error: return the error message to the user
         msg = key
-
     module.exit_json(changed=changed, msg=msg)
 
 
@@ -171,7 +190,6 @@ def absent(module, dest, host):
         del lines[found]
         write_known_hosts(module, dest, lines)
         changed = True
-
     module.exit_json(changed=changed, msg=msg)
 
 
@@ -184,25 +202,23 @@ def main():
             keyscan=dict(default='ssh-keyscan'),
             port=dict(default='22'),
             state=dict(default='present', choices=['absent', 'present']),
+            aliases=dict(default=''),
         ),
         supports_check_mode=True
     )
-    params = module.params
 
     host = module.params['host']
     keyscan = module.params['keyscan']
     port = module.params['port']
     enctype = module.params['enctype']
-    dest = os.path.expanduser(params['dest'])
-# not implemented:
-#    aliases = module.params['aliases']
-#    key = module.params['key']
+    dest = os.path.expanduser(module.params['dest'])
+    aliases = module.params['aliases']
 
-    if 'host' not in params:
+    if 'host' not in module.params:
         module.fail_json(msg='host= is required')
 
-    if params['state'] == 'present':
-        present(module, dest, host, keyscan, enctype, port)
+    if module.params['state'] == 'present':
+        present(module, dest, host, keyscan, enctype, port, aliases)
     else:
         absent(module, dest, host)
 
