@@ -63,3 +63,8 @@ Feedback on these and other options would be appreciated.
   my first public ansible module)
 * Tested on Debian flavours (Mint 14 and up) and OpenBSD 5.2 and up.
 * Contact me at http://www.bfmartin.ca/contact/
+
+## License
+
+This is released under the BSD license.  See the LICENSE file for a
+full statement.
