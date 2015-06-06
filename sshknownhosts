@@ -135,12 +135,9 @@ class KeyScanError(Exception):
 def scan_key(module, host, keyscan, enctype, port):
     cmd = keyscan + ' -p ' + port + ' -t ' + enctype + ' ' + host
     (rc, out, err) = module.run_command(cmd)
-
-    # look for a non-blank string
-    mre = re.compile(r"^\s*$")
-    if not rc == 0 or not mre.search(out):
-        raise KeyScanError('Error while executing: "%s";\nCommand output:  %s' % (cmd, err.strip()))
-    return out
+    if rc == 0:
+        return out
+    raise KeyScanError('Error while executing: "%s";\nCommand output:  %s\nCommand return code: %s' % (cmd, err.strip(), rc))
 
 
 # add aliases into knownhosts line.
