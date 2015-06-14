@@ -127,20 +127,17 @@ def write_known_hosts(module, dest, lines):
         of.close
 
 
-# scan the remote host.
-# return an array: [rc, str]
-# rc = return code: 0 = success, -1 = error
-# str = public key or error message
+class KeyScanError(Exception):
+
+    pass
+
+
 def scan_key(module, host, keyscan, enctype, port):
     cmd = keyscan + ' -p ' + port + ' -t ' + enctype + ' ' + host
     (rc, out, err) = module.run_command(cmd)
-
-    # look for a non-blank string
-    mre = re.compile(r"^\s*$")
-    if not mre.search(out):
-        return [0, out]
-    else:
-        return [-1, err.strip()]
+    if rc == 0:
+        return out
+    raise KeyScanError('Error while executing: "%s";\nCommand output:  %s\nCommand return code: %s' % (cmd, err.strip(), rc))
 
 
 # add aliases into knownhosts line.
@@ -158,25 +155,24 @@ def present(module, dest, host, keyscan, enctype, port, aliases):
     msg = ""
     lines = read_known_hosts(dest)
     found = find_host(lines, host)
-    rc, key = scan_key(module, host, keyscan, enctype, port)
+    try:
+        key = scan_key(module, host, keyscan, enctype, port)
+    except KeyScanError as e:
+        module.fail_json(msg=e.message)
 
-    if rc == 0:
-        key = add_aliases(key, aliases)
-        if found != -1:
-            if key != lines[found]:
-                # replace
-                del lines[found]
-                lines.append(key)
-                write_known_hosts(module, dest, lines)
-                changed = True
-        else:
-            # add
+    key = add_aliases(key, aliases)
+    if found != -1:
+        if key != lines[found]:
+            # replace
+            del lines[found]
             lines.append(key)
             write_known_hosts(module, dest, lines)
             changed = True
     else:
-        # error: return the error message to the user
-        msg = key
+        # add
+        lines.append(key)
+        write_known_hosts(module, dest, lines)
+        changed = True
     module.exit_json(changed=changed, msg=msg)
 
 
