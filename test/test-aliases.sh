@@ -29,7 +29,10 @@ INVENTORY_FILE=inventory
 # -a                module args follow
 ANSIBLE_ARGS="all -i ${INVENTORY_FILE} -M .. -c local -o -m sshknownhosts -a"
 
-echo localhost > ${INVENTORY_FILE}
+echo '[all]' > ${INVENTORY_FILE}
+echo localhost >> ${INVENTORY_FILE}
+echo '[all:vars]' >> ${INVENTORY_FILE}
+echo ansible_python_interpreter=/usr/bin/python3 >> ${INVENTORY_FILE}
 
 # remove file, if it exists
 rm -f ${TEST_KH_FILE}
@@ -64,6 +67,13 @@ if [ $? -ne 0 ]; then echo test failed 1; fi
 ansible ${ANSIBLE_ARGS} "host=gitserver dest=${TEST_KH_FILE} state=absent"
 diff ${TEST_KH_FILE} ${TEST_KH_FILE}-save
 if [ $? -ne 0 ]; then echo test failed 2; fi
+
+### Test 3
+
+# make sure the task fails if it can't run the ssh-keyscan command
+echo expect a FAILED here:
+ansible ${ANSIBLE_ARGS} "host=localhost dest=${TEST_KH_FILE} keyscan=nonexistant"
+if [ $? -eq 0 ]; then echo test failed 3; fi
 
 ### done
 
