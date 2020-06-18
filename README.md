@@ -1,6 +1,10 @@
 # sshknownhosts
 
 
+## Requirements
+
+As of 2020-06-17, this module requires Python version 3. Python version 3.6.9 was used to develop the upgrade. This likely means the role is no longer compatible with Python version 2, though that is untested.
+
 ## Installation
 
 Copy `sshknownhosts` to `$ANSIBLE_LIBRARY` on the management host.
